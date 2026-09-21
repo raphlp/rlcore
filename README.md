@@ -35,6 +35,7 @@ Pricing starts at €49/month.
 | **Database** | 111 migrations · ~10k lines SQL · 64 tables · 183 RLS policies |
 | **Languages** | French, English, Spanish — UI *and* content |
 | **Modules** | Analytics, CRM, Invoicing, Orders, Catalog, Shipping, Projects, Bookings, Blog |
+| **Growth engine** | ~9.5k lines · 19 external data sources · 12 scheduled jobs · a VPS daemon |
 
 ---
 
@@ -60,6 +61,9 @@ flowchart TB
 
     S --> EF["Edge Functions<br/>push · invites · deletion"]
     EF --> D
+
+    N <-->|"no DB credentials"| V["VPS daemon (systemd)<br/>SMTP send · IMAP poll"]
+    G["Public data sources<br/>BODACC · registry · OSM · Places"] --> N
 ```
 
 Everything a tenant can see is decided **in the database**, not in application code.
@@ -167,6 +171,24 @@ error into a sentence I can act on at 11pm.
 same dashboard, on the same data, with no per-event pricing — and I understand every
 line of it.
 
+### 8. The prospecting daemon holds no database credentials
+
+**Context.** RLCore finds its own customers: a pipeline collects public French business
+records, diagnoses which businesses have a web-presence problem, and contacts them.
+Sending runs from a VPS, which is the most exposed machine in the system.
+
+**Decision.** The daemon holds a scoped API secret and mailbox credentials — nothing
+else. Every decision (sending window, daily cap, opt-out list, deliverability health) is
+made application-side, by the only component with the database key. The daemon asks
+"what should I do?", sends one email, reports back.
+
+**Trade-off.** A chattier protocol and one more failure mode when the site is down.
+In exchange, compromising the VPS yields a mailbox — not the prospect database, and not
+the customer data. Least privilege enforced by topology rather than configuration.
+
+→ **[Full write-up: the growth engine](docs/growth-engine.md)** — pipeline, warm-up
+ramp, deliverability guardrails, and the passive-only rule for the diagnostic.
+
 ---
 
 ## What I would do differently
@@ -185,6 +207,7 @@ line of it.
 ## Documentation
 
 - [Architecture](docs/architecture.md) — data model, tenancy, request flow
+- [Growth engine](docs/growth-engine.md) — data pipeline, the VPS daemon, guardrails
 - [Design system](docs/design-system.md) — tokens, motifs, the visual language
 
 ---

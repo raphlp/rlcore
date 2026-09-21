@@ -8,6 +8,13 @@ Live at **[rlcore.fr](https://www.rlcore.fr)**. Built and operated solo.
 > is private. This repository documents the architecture and the engineering decisions
 > behind it — the part that is actually worth reading.
 
+<div align="center">
+<img src="assets/01-modules.png" width="32%" alt="Modules screen — each tenant sees only what is enabled for them">
+<img src="assets/02-dashboard.png" width="32%" alt="Tenant dashboard with live site preview and 30-day visits">
+</div>
+
+<div align="center"><sub>The mobile client — same Postgres, same RLS policies, no API layer in between.</sub></div>
+
 ---
 
 ## The problem
